@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace LZW
 {
-    public class EnumerableEqualityComparer<V> : IEqualityComparer<List<V>>
+    public class EnumerableEqualityComparer<V> : IEqualityComparer<IEnumerable<V>>
     {
         public IEqualityComparer<V> ElementComparer { get; }
 
@@ -21,9 +21,9 @@ namespace LZW
             this.ElementComparer = elementComparer ?? EqualityComparer<V>.Default;
         }
 
-        public bool Equals(List<V> x, List<V> y) => x.SequenceEqual(y);
+        public bool Equals(IEnumerable<V> x, IEnumerable<V> y) => x.SequenceEqual(y);
 
-        public int GetHashCode([DisallowNull] List<V> obj)
+        public int GetHashCode([DisallowNull] IEnumerable<V> obj)
         {
             var hash = 17;
 
