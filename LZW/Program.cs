@@ -17,7 +17,7 @@ namespace LZW
         {
             var input = "BABAABAAA";
             var inputBytes = Encoding.Default.GetBytes(input);
-            var compressor = new LZWCompressor();
+            var compressor = new LZWProcessor();
             var encodedCodes = new List<int>();
 
             using (var encodeStream = new MemoryStream(inputBytes))
@@ -25,7 +25,7 @@ namespace LZW
                 while (true)
                 {
                     var b = encodeStream.ReadByte();
-                    var code = compressor.Write(b);
+                    var code = compressor.Encode(b);
 
                     if (code > -1)
                     {
@@ -73,13 +73,14 @@ namespace LZW
             Console.WriteLine("===== Decoded Bytes =====");
 
             byte[] decodedBytes = null;
-            var decompressor = new LZWDecompressor();
+            var decompressor = new LZWProcessor();
 
             using (var decodeStream = new MemoryStream())
             {
                 foreach (var e in encodedCodes)
                 {
-                    var bytes = decompressor.Read(e).ToArray();
+                    var tableKey = decompressor.Decode(e);
+                    var bytes = decompressor.Table[tableKey].ToArray();
                     decodeStream.Write(bytes, 0, bytes.Length);
                 }
 
