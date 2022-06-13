@@ -10,7 +10,7 @@ namespace LZW
     {
         public BidirectionalDictionary<int, List<byte>> Table { get; }
         private readonly List<byte> EncodeBuilder;
-        public int LastCode { get; private set; } = -1;
+        public int LastKey { get; private set; } = -1;
 
         public LZWProcessor()
         {
@@ -24,6 +24,8 @@ namespace LZW
 
         }
 
+        public virtual int NextKey => this.Table.Count;
+
         /// <summary>
         /// 
         /// </summary>
@@ -31,7 +33,7 @@ namespace LZW
         /// <returns>Table Key of Inserted values</returns>
         public int InsertToTable(List<byte> values)
         {
-            var key = this.Table.Count;
+            var key = this.NextKey;
             this.Table[key] = values.ToList();
             return key;
         }
@@ -39,27 +41,26 @@ namespace LZW
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="values"></param>
+        /// <param name="value"></param>
         /// <returns>Table Key of Inserted value, -1 mean 'Require More Values'</returns>
-        public int Encode(int values)
+        public int Encode(int value)
         {
-            var lastCode = this.LastCode;
+            var lastKey = this.LastKey;
 
-            if (values <= -1)
+            if (value <= -1)
             {
-                this.LastCode = -1;
-                return lastCode;
+                this.LastKey = -1;
+                return lastKey;
             }
             else
             {
-                var table = this.Table;
-                var byteValue = (byte)values;
+                var byteValue = (byte)value;
                 var builder = this.EncodeBuilder;
                 builder.Add(byteValue);
 
-                if (table.TryGetA(builder, out var code) == true)
+                if (this.Table.TryGetA(builder, out var key) == true)
                 {
-                    this.LastCode = code;
+                    this.LastKey = key;
                     return -1;
                 }
                 else
@@ -68,8 +69,8 @@ namespace LZW
                     builder.Clear();
                     builder.Add(byteValue);
 
-                    this.LastCode = values;
-                    return lastCode;
+                    this.LastKey = value;
+                    return lastKey;
                 }
 
             }
@@ -83,8 +84,6 @@ namespace LZW
         /// <returns>Table Key of decoded data, -1 mean 'End Of Decode'</returns>
         public int Decode(int code)
         {
-            var builder = new List<byte>();
-
             if (code <= -1)
             {
                 return -1;
@@ -92,30 +91,31 @@ namespace LZW
             else
             {
                 var table = this.Table;
-                var lastCode = this.LastCode;
-                this.LastCode = code;
+                var lastKey = this.LastKey;
+                var builder = new List<byte>();
 
-                if (lastCode > -1)
+                if (lastKey > -1)
                 {
-                    builder.AddRange(table[lastCode]);
+                    builder.AddRange(table[lastKey]);
                 }
 
                 if (table.ContainsA(code) == true)
                 {
-                    if (lastCode > -1)
+                    if (lastKey > -1)
                     {
                         builder.Add(table[code][0]);
                         this.InsertToTable(builder);
                     }
 
+                    this.LastKey = code;
                     return code;
                 }
                 else
                 {
-                    builder.Add(table[lastCode][0]);
-                    var insertedKey = this.InsertToTable(builder);
-
-                    return insertedKey;
+                    builder.Add(table[lastKey][0]);
+                    var key = this.InsertToTable(builder);
+                    this.LastKey = key;
+                    return key;
                 }
 
             }
