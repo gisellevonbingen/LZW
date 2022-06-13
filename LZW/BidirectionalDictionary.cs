@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace LZW
 {
-    public class BidirectionalDictionary<A, B> : IEnumerable<Tuple<A, B>>
+    public class BidirectionalDictionary<A, B> : ICollection<Tuple<A, B>>
     {
         private readonly Dictionary<A, B> A2B;
         private readonly Dictionary<B, A> B2A;
@@ -34,6 +34,12 @@ namespace LZW
 
         public ReadOnlyDictionary<B, A> BtoA => new ReadOnlyDictionary<B, A>(this.B2A);
 
+        public int Count => this.A2B.Count;
+
+        public bool IsReadOnly => false;
+
+        public void Add(Tuple<A, B> item) => this.Add(item.Item1, item.Item2);
+
         public void Add(A a, B b)
         {
             if (this.A2B.ContainsKey(a) == true)
@@ -58,7 +64,9 @@ namespace LZW
             this.B2A[b] = a;
         }
 
-        public bool ContainsPair(A a, B b) => this.TryGetB(a, out var rb) && this.BComparer.Equals(b, rb) && this.TryGetA(b, out var ra) && this.AComparer.Equals(a, ra);
+        public bool Contains(A a, B b) => this.TryGetB(a, out var rb) && this.BComparer.Equals(b, rb) && this.TryGetA(b, out var ra) && this.AComparer.Equals(a, ra);
+
+        public bool Contains(Tuple<A, B> item) => this.Contains(item.Item1, item.Item2);
 
         public bool ContainsA(A a) => this.A2B.ContainsKey(a);
 
@@ -114,7 +122,9 @@ namespace LZW
 
         }
 
-        public bool RemovePair(A a, B b)
+        public bool Remove(Tuple<A, B> item) => this.Remove(item.Item1, item.Item2);
+
+        public bool Remove(A a, B b)
         {
             if (this.TryGetB(a, out var rb) == true && this.BComparer.Equals(b, rb) == true)
             {
@@ -140,6 +150,18 @@ namespace LZW
         }
 
         IEnumerator IEnumerable.GetEnumerator() => this.A2B.GetEnumerator();
+
+        public void Clear()
+        {
+            this.A2B.Clear();
+            this.B2A.Clear();
+        }
+
+        public void CopyTo(Tuple<A, B>[] destinationArray, int destinationIndex)
+        {
+            var sourceArray = this.ToArray();
+            Array.Copy(sourceArray, 0, destinationArray, destinationIndex, sourceArray.Length);
+        }
 
     }
 
