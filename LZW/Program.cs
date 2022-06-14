@@ -58,7 +58,7 @@ namespace LZW
 
             foreach (var pair in compressor.Table.Where(p => p.Item1 > byte.MaxValue))
             {
-                Console.WriteLine($"0x{pair.Item1:X}: {string.Join(", ", pair.Item2.Select(e => $"0x{e:X2}"))}");
+                Console.WriteLine($"0x{pair.Item1:X}: {string.Join(", ", pair.Item2.Values.Select(e => $"0x{e:X2}"))}");
             }
 
             Console.WriteLine();
@@ -80,7 +80,7 @@ namespace LZW
                 foreach (var e in encodedCodes)
                 {
                     var tableKey = decompressor.Decode(e);
-                    var bytes = decompressor.Table[tableKey].ToArray();
+                    var bytes = decompressor.Table[tableKey].Values.ToArray();
                     decodeStream.Write(bytes, 0, bytes.Length);
                 }
 
@@ -99,7 +99,7 @@ namespace LZW
 
             foreach (var pair in decompressor.Table.Where(p => p.Item1 > byte.MaxValue))
             {
-                Console.WriteLine($"0x{pair.Item1:X}: {string.Join(", ", pair.Item2.Select(e => $"0x{e:X2}"))}");
+                Console.WriteLine($"0x{pair.Item1:X}: {string.Join(", ", pair.Item2.Values.Select(e => $"0x{e:X2}"))}");
             }
 
             Console.WriteLine();

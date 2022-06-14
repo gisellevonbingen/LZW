@@ -58,12 +58,6 @@ namespace LZW
 
         }
 
-        public void Set(A a, B b)
-        {
-            this.A2B[a] = b;
-            this.B2A[b] = a;
-        }
-
         public bool Contains(A a, B b) => this.TryGetB(a, out var rb) && this.BComparer.Equals(b, rb) && this.TryGetA(b, out var ra) && this.AComparer.Equals(a, ra);
 
         public bool Contains(Tuple<A, B> item) => this.Contains(item.Item1, item.Item2);
@@ -75,13 +69,11 @@ namespace LZW
         public B this[A a]
         {
             get => this.GetB(a);
-            set => this.Set(a, value);
         }
 
         public A this[B b]
         {
             get => this.GetA(b);
-            set => this.Set(value, b);
         }
 
         public B GetB(A a) => this.A2B[a];

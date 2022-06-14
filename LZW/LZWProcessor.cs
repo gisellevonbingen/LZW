@@ -8,33 +8,39 @@ namespace LZW
 {
     public class LZWProcessor
     {
-        public BidirectionalDictionary<int, List<byte>> Table { get; }
-        private readonly List<byte> EncodeBuilder;
+        public BidirectionalDictionary<int, LZWNode> Table { get; }
+        private LZWNode EncodeBuilder;
         public int LastKey { get; private set; } = -1;
 
-        public LZWProcessor()
+        public LZWProcessor() : this(0)
         {
-            this.Table = new BidirectionalDictionary<int, List<byte>>(null, new EnumerableEqualityComparer<byte>());
-            this.EncodeBuilder = new List<byte>();
-
-            for (int i = byte.MinValue; i <= byte.MaxValue; i++)
-            {
-                this.Table[i] = new List<byte>() { (byte)i };
-            }
 
         }
 
-        public virtual int NextKey => this.Table.Count;
+        public LZWProcessor(int extendsKeyOffset)
+        {
+            this.Table = new BidirectionalDictionary<int, LZWNode>();
+            this.EncodeBuilder = new LZWNode();
+
+            for (int i = byte.MinValue; i <= byte.MaxValue; i++)
+            {
+                this.Table.Add(i, new LZWNode((byte)i));
+            }
+
+            this.NextKey = this.Table.Count + extendsKeyOffset;
+        }
+
+        public virtual int NextKey { get; private set; }
 
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="values"></param>
+        /// <param name="node"></param>
         /// <returns>Table Key of Inserted values</returns>
-        public int InsertToTable(List<byte> values)
+        public int InsertToTable(LZWNode node)
         {
-            var key = this.NextKey;
-            this.Table[key] = values.ToList();
+            var key = this.NextKey++;
+            this.Table.Add(key, node);
             return key;
         }
 
@@ -66,8 +72,7 @@ namespace LZW
                 else
                 {
                     this.InsertToTable(builder);
-                    builder.Clear();
-                    builder.Add(byteValue);
+                    this.EncodeBuilder = new LZWNode(byteValue);
 
                     this.LastKey = value;
                     return lastKey;
@@ -90,20 +95,25 @@ namespace LZW
             }
             else
             {
+                if (code == 514)
+                {
+
+                }
+
                 var table = this.Table;
                 var lastKey = this.LastKey;
-                var builder = new List<byte>();
+                var builder = new LZWNode();
 
                 if (lastKey > -1)
                 {
-                    builder.AddRange(table[lastKey]);
+                    builder.AddRange(table[lastKey].Values);
                 }
 
                 if (table.ContainsA(code) == true)
                 {
                     if (lastKey > -1)
                     {
-                        builder.Add(table[code][0]);
+                        builder.Add(table[code].Values[0]);
                         this.InsertToTable(builder);
                     }
 
@@ -112,7 +122,7 @@ namespace LZW
                 }
                 else
                 {
-                    builder.Add(table[lastKey][0]);
+                    builder.Add(table[lastKey].Values[0]);
                     var key = this.InsertToTable(builder);
                     this.LastKey = key;
                     return key;
